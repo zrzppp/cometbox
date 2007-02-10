@@ -41,8 +41,6 @@ namespace cometbox
 					i++;
 				}
 			}
-			
-			Console.WriteLine("WebInterfaceServer: Exiting thread.");
 		}
 		
 		public bool IsRunning()

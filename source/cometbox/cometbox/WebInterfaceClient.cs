@@ -44,7 +44,6 @@ namespace cometbox
 		public static void callbackRead(IAsyncResult ar) 
 		{
 			WebInterfaceClient dc = (WebInterfaceClient)ar.AsyncState;
-			String data = "";
 			int bytes = 0;
 			
 			try {
@@ -168,13 +167,13 @@ namespace cometbox
 		{
 			try {
 				stream.Close();
-			} catch (Exception e) {}
+			} catch {}
 			try {
 				stream.Dispose();
-			} catch (Exception e) {}
+			} catch {}
 			try {
 				client.Close();
-			} catch (Exception e) {}
+			} catch {}
 			
 			stream = null;
 			client = null;
@@ -187,7 +186,7 @@ namespace cometbox
 		{
 			try {
 				return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(str));
-			} catch (Exception e) {
+			} catch {
 				return "";
 			}
 		}

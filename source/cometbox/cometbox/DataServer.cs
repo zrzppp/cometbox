@@ -30,8 +30,6 @@ namespace cometbox
 
 				DataClient dc = new DataClient(client);
 			}
-			
-			Console.WriteLine("DataServer: Exiting thread.");
 		}
 		
 		public bool IsRunning()
