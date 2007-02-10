@@ -1,0 +1,5 @@
+bin\Debug\cometbox.exe
+bin\Debug\cometbox.pdb
+obj\Debug\ResolveAssemblyReference.cache
+obj\Debug\cometbox.exe
+obj\Debug\cometbox.pdb
