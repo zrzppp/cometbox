@@ -3,6 +3,9 @@ using System.Threading;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace cometbox
 {
@@ -23,6 +26,36 @@ namespace cometbox
             {
                 Thread.Sleep(0);
             }
+        }
+
+        static void BuildNewConfig()
+        {
+            ApplicationConfig c = new ApplicationConfig();
+
+            c.ClientInterface = new ApplicationConfig.ClientInterfaceConfig();
+            c.ClientInterface.Authentication = new ApplicationConfig.AuthenticationConfig();
+            c.ClientInterface.Authentication.Type = ApplicationConfig.AuthenticationConfig.AuthenticationType.None;
+            c.ClientInterface.Authentication.Realm = "cometbox Client Interface";
+            c.ClientInterface.Authentication.Username = "none";
+            c.ClientInterface.Authentication.Password = "none";
+
+            c.WebInterface = new ApplicationConfig.WebInterfaceConfig();
+            c.WebInterface.Authentication = new ApplicationConfig.AuthenticationConfig();
+            c.WebInterface.Authentication.Type = ApplicationConfig.AuthenticationConfig.AuthenticationType.Basic;
+            c.WebInterface.Authentication.Realm = "cometbox Web Interface";
+            c.WebInterface.Authentication.Username = "cometbox";
+            c.WebInterface.Authentication.Password = "cometbox123";
+
+            c.ServerInterface = new ApplicationConfig.ServerInterfaceConfig();
+            c.ServerInterface.LocalOnly = true;
+
+
+            using (FileStream fs = new FileStream(@"cometbox.conf", FileMode.Create))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(ApplicationConfig));
+                serializer.Serialize(fs, c);
+            }
+
         }
     }
 }
