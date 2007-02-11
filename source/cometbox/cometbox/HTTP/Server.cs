@@ -8,10 +8,10 @@ using System.Collections.Generic;
 
 namespace cometbox.HTTP
 {
-    public class Server
+    abstract public class Server
     {
         private Thread thread = null;
-		private static TcpListener listener = null;
+		private TcpListener listener = null;
 
 		public Server(IPAddress ip, Int32 port)
 		{
@@ -47,5 +47,7 @@ namespace cometbox.HTTP
 		{
 			return thread.IsAlive;
 		}
+
+        abstract public Response HandleRequest(Request request);
     }
 }

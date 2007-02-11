@@ -4,7 +4,7 @@ using System.Text;
 
 namespace cometbox.HTTP
 {
-    class Request
+    public class Request
     {
         public string Method;
         public string Url;
@@ -22,8 +22,6 @@ namespace cometbox.HTTP
             }
             return false;
         }
-
-
 
         public bool VerifyAuth(Config.AuthConfig auth)
         {
@@ -65,6 +63,11 @@ namespace cometbox.HTTP
             {
                 return true;
             }
+        }
+
+        public string GetDocument()
+        {
+
         }
     }
 }

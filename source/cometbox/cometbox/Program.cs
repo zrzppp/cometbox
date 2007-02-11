@@ -44,8 +44,10 @@ namespace cometbox
                 return;
             }
 
+            WIServer wiserver = new WIServer(Configuration.WebInterface);
+
             //ServerInterfaceServer data = new ServerInterfaceServer(Dns.GetHostEntry(IPAddress.Parse(Config.ServerInterface.BindTo)).AddressList[0], Config.ServerInterface.Port);
-            //WebInterfaceServer webint = new WebInterfaceServer(Dns.GetHostEntry(IPAddress.Parse(Configuration.WebInterface.BindTo)).AddressList[0], Configuration.WebInterface.Port);
+            //WebInterfaceServer webint = new WebInterfaceServer();
 
             //while (webint.IsRunning())
             //{

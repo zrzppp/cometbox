@@ -11,17 +11,22 @@ namespace cometbox.HTTP
         private TcpClient client = null;
         private NetworkStream stream = null;
 
+
+        Server server;
+
         byte[] read_buffer = new byte[1024];
         string buffer = "";
         int bufferpos = 0;
-        ParseState state = ParseState.Start;
+
         HTTP.Request request;
+        ParseState state = ParseState.Start;
 
         public bool IsLive = true;
 
-        public Client(TcpClient c, Server server)
+        public Client(TcpClient c, Server s)
         {
             client = c;
+            server = s;
 
             stream = client.GetStream();
 
@@ -122,7 +127,11 @@ namespace cometbox.HTTP
             }
 
             if (state == ParseState.Done) {
-                HandleRequest();
+                HTTP.Response response = server.HandleRequest(request);
+
+                string res = response.GetResponse();
+                Send(res);
+
                 state = ParseState.Start;
                 request = null;
             }
@@ -144,8 +153,7 @@ namespace cometbox.HTTP
                 }
             }
 
-            string res = response.GetResponse();
-            Send(res);
+      
         }
 
         private HTTP.Response GetResponse_Form()
