@@ -25,9 +25,9 @@ namespace cometbox.HTTP
 
 
 
-        public bool VerifyAuth(AppConfig.AuthConfig auth)
+        public bool VerifyAuth(Config.AuthConfig auth)
         {
-            if (auth.Type == AppConfig.AuthConfig.AuthType.Basic)
+            if (auth.Type == Config.AuthType.Basic)
             {
                 string[] pair;
                 if (Headers.ContainsKey("Authorization"))
@@ -56,7 +56,7 @@ namespace cometbox.HTTP
                     return false;
                 }
             }
-            else if (auth.Type == AppConfig.AuthConfig.AuthType.Digest)
+            else if (auth.Type == Config.AuthType.Digest)
             {
                 //TODO: Handle digest authenticaion
                 return false;
