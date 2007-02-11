@@ -6,13 +6,13 @@ using System.Net.Sockets;
 
 namespace cometbox
 {
-	public class DataClient
+	public class ServerInterfaceClient
 	{
 		private TcpClient client = null;
 		private NetworkStream stream = null;
 		byte[] read_buffer = new byte[1024];
 		
-		public DataClient(TcpClient c)
+		public ServerInterfaceClient(TcpClient c)
 		{
 			client = c;
 					
@@ -25,7 +25,7 @@ namespace cometbox
 		
 		public static void callbackRead(IAsyncResult ar) 
 		{
-			DataClient dc = (DataClient)ar.AsyncState;
+			ServerInterfaceClient dc = (ServerInterfaceClient)ar.AsyncState;
 			String data = "";
 			int bytes = 0;
 			
@@ -38,7 +38,7 @@ namespace cometbox
 			
 			Console.WriteLine(data);
 			
-			dc.stream.BeginRead(dc.read_buffer, 0, 1024, new AsyncCallback(DataClient.callbackRead), dc);
+			dc.stream.BeginRead(dc.read_buffer, 0, 1024, new AsyncCallback(ServerInterfaceClient.callbackRead), dc);
 		}
 	}
 }

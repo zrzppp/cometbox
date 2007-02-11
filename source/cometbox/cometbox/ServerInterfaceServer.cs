@@ -6,12 +6,12 @@ using System.Net.Sockets;
 
 namespace cometbox
 {
-	public class DataServer
+	public class ServerInterfaceServer
 	{
 		private Thread t = null;
 		private static TcpListener server = null;
 	
-		public DataServer(IPAddress ip, Int32 port)
+		public ServerInterfaceServer(IPAddress ip, Int32 port)
 		{
 			Console.WriteLine("DataServer: Starting on {0}:{1}.", ip.ToString(), port);
 			server = new TcpListener(ip, port);
@@ -28,7 +28,7 @@ namespace cometbox
 				
 				TcpClient client = server.AcceptTcpClient();
 
-				DataClient dc = new DataClient(client);
+				ServerInterfaceClient dc = new ServerInterfaceClient(client);
 			}
 		}
 		

@@ -11,49 +11,98 @@ namespace cometbox
 {
     class Program
     {
+        public static AppConfig Config;
+
         static void Main(string[] args)
         {
-            IPAddress dataip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0];
-            Int32 dataport = 1800;
+            BuildNewConfig();
 
-            IPAddress webintip = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0];
-            Int32 webintport = 1801;
+            string configfile = "";
 
-            DataServer data = new DataServer(dataip, dataport);
-            WebInterfaceServer webint = new WebInterfaceServer(webintip, webintport);
-
-            while (data.IsRunning())
+            if (args.Length == 0)
             {
-                Thread.Sleep(0);
+                configfile = "cometbox.conf";
             }
+            else
+            {
+                configfile = args[0];
+            }
+
+            if (new FileInfo(configfile).Exists)
+            {
+                if ((Config = LoadConfig(configfile)) == null)
+                {
+                    Console.WriteLine("Error loading configuration.");
+                    GracefullyChokeAndDie();
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Configuration not found: " + configfile);
+                GracefullyChokeAndDie();
+                return;
+            }
+
+            //ServerInterfaceServer data = new ServerInterfaceServer(Dns.GetHostEntry(IPAddress.Parse(Config.ServerInterface.BindTo)).AddressList[0], Config.ServerInterface.Port);
+            WebInterfaceServer webint = new WebInterfaceServer(Dns.GetHostEntry(IPAddress.Parse(Config.WebInterface.BindTo)).AddressList[0], Config.WebInterface.Port);
+
+            while (webint.IsRunning())
+            {
+                Thread.Sleep(1000);
+            }
+        }
+
+        static void GracefullyChokeAndDie()
+        {
+            Console.WriteLine("");
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey(true);
+        }
+
+        static AppConfig LoadConfig(string configfile)
+        {
+            AppConfig c = null;
+            try
+            {
+                using (FileStream fs = new FileStream(configfile, FileMode.Open))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(AppConfig));
+                    c = (AppConfig)serializer.Deserialize(fs);
+                }
+            }
+            catch { }
+
+            return c;
         }
 
         static void BuildNewConfig()
         {
-            ApplicationConfig c = new ApplicationConfig();
+            AppConfig c = new AppConfig();
 
-            c.ClientInterface = new ApplicationConfig.ClientInterfaceConfig();
-            c.ClientInterface.Authentication = new ApplicationConfig.AuthenticationConfig();
-            c.ClientInterface.Authentication.Type = ApplicationConfig.AuthenticationConfig.AuthenticationType.None;
-            c.ClientInterface.Authentication.Realm = "cometbox Client Interface";
+            c.ClientInterface = new AppConfig.ClientInterfaceConfig();
+            c.ClientInterface.Authentication = new AppConfig.AuthConfig();
+            c.ClientInterface.Authentication.Type = AppConfig.AuthConfig.AuthType.None;
+            c.ClientInterface.Authentication.Realm = "2cometbox Client Interface";
             c.ClientInterface.Authentication.Username = "none";
             c.ClientInterface.Authentication.Password = "none";
 
-            c.WebInterface = new ApplicationConfig.WebInterfaceConfig();
-            c.WebInterface.Authentication = new ApplicationConfig.AuthenticationConfig();
-            c.WebInterface.Authentication.Type = ApplicationConfig.AuthenticationConfig.AuthenticationType.Basic;
-            c.WebInterface.Authentication.Realm = "cometbox Web Interface";
+            c.WebInterface = new AppConfig.WebInterfaceConfig();
+            c.WebInterface.Authentication = new AppConfig.AuthConfig();
+            c.WebInterface.Authentication.Type = AppConfig.AuthConfig.AuthType.Basic;
+            c.WebInterface.Authentication.Realm = "Cometbox Web Interface";
             c.WebInterface.Authentication.Username = "cometbox";
             c.WebInterface.Authentication.Password = "cometbox123";
 
-            c.ServerInterface = new ApplicationConfig.ServerInterfaceConfig();
+            c.ServerInterface = new AppConfig.ServerInterfaceConfig();
             c.ServerInterface.LocalOnly = true;
 
 
             using (FileStream fs = new FileStream(@"cometbox.conf", FileMode.Create))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(ApplicationConfig));
+                XmlSerializer serializer = new XmlSerializer(typeof(AppConfig));
                 serializer.Serialize(fs, c);
+                fs.Close();
             }
 
         }

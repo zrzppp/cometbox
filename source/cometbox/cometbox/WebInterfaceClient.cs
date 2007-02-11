@@ -8,27 +8,16 @@ namespace cometbox
 {
 	public class WebInterfaceClient
 	{
-		private struct HTTPResponse 
-		{
-			public string status;
-			public string mime;
-			public string body;
-			
-			public HTTPResponse(string s, string m, string b) 
-			{
-				status = s;
-				mime = m;
-				body = b;
-			}
-		}
+
 	
 		private TcpClient client = null;
 		private NetworkStream stream = null;
-		private WebInterfaceServer parent = null;
+
 		byte[] read_buffer = new byte[1024];
 		string buffer = "";
 		int bufferpos = 0;
-		string AuthPassword = "cometbox123";
+        ParseState state = ParseState.Start;
+        HTTP.Request request;
 		
 		public bool IsLive = true;
 
@@ -40,156 +29,231 @@ namespace cometbox
 			
 			stream.BeginRead(read_buffer, 0, 1024, new AsyncCallback(callbackRead), this);
 		}
-		
-		public static void callbackRead(IAsyncResult ar) 
-		{
-			WebInterfaceClient dc = (WebInterfaceClient)ar.AsyncState;
-			int bytes = 0;
-			
-			try {
-				bytes = dc.stream.EndRead(ar);
-				if ( bytes <= 0 ) {
-					Console.WriteLine("WebInterfaceClient: Remote disconnect {0}.", dc.client.Client.RemoteEndPoint.ToString());
-					dc.CleanUp();
-					return;
-				}
-				
-				dc.buffer += Encoding.ASCII.GetString(dc.read_buffer, 0, bytes);
-				dc.Handle();
-				
-				if ( dc.stream != null ) {
-					dc.stream.BeginRead(dc.read_buffer, 0, 1024, new AsyncCallback(WebInterfaceClient.callbackRead), dc);
-				}
-			} catch (Exception e) {
-				Console.WriteLine("WebInterfaceClient: Error in callbackRead() - {0}", e.Message);
-			}
-		}
-		
-		private void Handle()
-		{
-			string[] datas = null;
-			string[] pair = null;
-			bool authGiven = false;
-			
-			int pos;
-			if ((pos = buffer.IndexOf("\r\n\r\n", bufferpos)) >= 0) {
-				string[] splitters = {"\r\n"};
-				datas = buffer.Split(splitters, StringSplitOptions.None);
-			} else if ((pos = buffer.IndexOf("\n\n", bufferpos)) >= 0) {
-				string[] splitters = {"\n"};
-				datas = buffer.Substring(0, pos+1).Split(splitters, StringSplitOptions.None);
-			}
-			
-			for ( int i=1; i<datas.Length; i++ ) {
-				pair = datas[i].Split(':');
-				if ( pair[0] == "Authorization" ) {
-					string[] splitters = {" "};
-					pair = pair[1].Split(splitters, StringSplitOptions.RemoveEmptyEntries);
-					if ( pair[0] == "Basic" && DecodeBase64(pair[1]) == ":" + AuthPassword ) {
-						authGiven = true;
-					}
-					break;
-				}
-			}
-			
-			
-			if ( datas != null && authGiven ) {
-				HTTPResponse res = GetResponse(datas[0].Split(' '));
-				
-				string r = "HTTP/1.0 " + res.status + "\r\n";
-				r += "Server: cometbox Web Interface\r\n";
-				r += "Content-Type: " + res.mime + "\r\n";
-				r += "Content-Length: " + res.body.Length + "\r\n";
-				r += "\r\n";
-				r += res.body;
-				
-				Send(r);
 
-				Console.WriteLine("WebInterfaceClient: Handled {0}. Status {1}. Length {2}.", datas[0], res.status, res.body.Length);
-				
-				CleanUp();
-			} else if ( datas != null && !authGiven ) {
-				//no auth, send headers
-				
-				string r = "HTTP/1.0 401 Unauthorized\r\n";
-				r += "Server: cometbox Web Interface\r\n";
-				r += "WWW-Authenticate: Basic realm=\"cometbox web interface\"\r\n";
-				r += "\r\n";
-				
-				Send(r);
-				
-				Console.WriteLine("WebInterfaceClient: Auth challenge sent.");
-			
-				CleanUp();
-			}
-		}
-		
-		private void Send(string data) 
+        public static void callbackRead(IAsyncResult ar)
+        {
+            WebInterfaceClient dc = (WebInterfaceClient)ar.AsyncState;
+            int bytes = 0;
+
+            //try {
+            bytes = dc.stream.EndRead(ar);
+            if (bytes <= 0)
+            {
+                dc.CleanUp();
+                return;
+            }
+
+            dc.buffer += Encoding.ASCII.GetString(dc.read_buffer, 0, bytes);
+
+            Console.WriteLine(dc.buffer);
+
+            dc.ParseInput();
+
+            if (dc.stream != null)
+            {
+                dc.stream.BeginRead(dc.read_buffer, 0, 1024, new AsyncCallback(WebInterfaceClient.callbackRead), dc);
+            }
+            //} catch (Exception e) {
+            //	Console.WriteLine("WebInterfaceClient: Error in callbackRead() - {0}", e.Message);
+            //}
+        }
+
+        private enum ParseState
+        {
+            Start,
+            Headers,
+            Content,
+            Done
+        }
+
+        private void ParseInput()
+        {
+            int pos;
+            string temp;
+            bool skip = false;
+            while (bufferpos < buffer.Length - 1 && state != ParseState.Done && !skip)
+            {
+                switch (state)
+                {
+                    case ParseState.Start:
+                        if ((pos = buffer.IndexOf("\r\n", bufferpos)) >= 0)
+                        {
+                            temp = buffer.Substring(bufferpos, pos - bufferpos);
+                            bufferpos = pos + 2;
+
+                            string[] parts = temp.Split(' ');
+                            if (parts.Length == 3)
+                            {
+                                request = new HTTP.Request();
+
+                                request.Method = parts[0];
+                                request.Url = parts[1];
+                                request.Version = parts[2];
+
+                                state = ParseState.Headers;
+                            }
+                            else
+                            {
+                                CleanUp();
+                            }
+                        }
+                        break;
+                    case ParseState.Headers:
+                        if ((pos = buffer.IndexOf("\r\n", bufferpos)) >= 0)
+                        {
+                            temp = buffer.Substring(bufferpos, pos - bufferpos);
+                            bufferpos = pos + 2;
+
+                            if (temp.Length > 0)
+                            {
+                                string[] parts = temp.Split(new string[1] { ": " }, StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length == 2)
+                                {
+                                    request.Headers.Add(parts[0], parts[1]);
+                                }
+                            }
+                            else
+                            {
+                                if (request.HasContent())
+                                {
+                                    state = ParseState.Content;
+                                }
+                                else
+                                {
+                                    state = ParseState.Done;
+                                }
+                            }
+                        }
+                        break;
+                    case ParseState.Content:
+                        if (bufferpos + request.ContentLength <= buffer.Length)
+                        {
+                            int t = bufferpos + request.ContentLength - 1;
+                            request.Body = buffer.Substring(bufferpos, request.ContentLength);
+                            bufferpos += request.ContentLength;
+
+                            state = ParseState.Done;
+                        }
+                        else
+                        {
+                            skip = true;
+                        }
+                        break;
+                }
+            }
+
+            if (state == ParseState.Done)
+            {
+                HandleRequest();
+                state = ParseState.Start;
+                request = null;
+            }
+        }
+
+        private void HandleRequest()
+        {
+            HTTP.Response response;
+
+            if (!request.VerifyAuth(Program.Config.WebInterface.Authentication))
+            {
+                response = GetResponse_401();
+            }
+            else
+            {
+                if (request.Url == "/")
+                {
+                    response = GetResponse_Root();
+                }
+                else if (request.Url == "/form")
+                {
+                    response = GetResponse_Form();
+                }
+                else
+                {
+                    response = GetResponse_404();
+                }
+            }
+
+            string res = response.GetResponse();
+            Send(res);
+        }
+
+        private HTTP.Response GetResponse_Form()
+        {
+            HTTP.Response response = new HTTP.Response();
+            response.Body = @"<html><head><title>Test Root</title></head><body>";
+            response.Body += request.Body;
+            response.Body += "</body></html>";
+            return response;
+        }
+
+		private HTTP.Response GetResponse_Root()
 		{
-			try {
-				byte[] bytes = Encoding.ASCII.GetBytes(data);
-				stream.Write(bytes, 0, bytes.Length);
-			} catch (Exception e) {
-				Console.WriteLine("WebInterfaceClient: Error in Send() - {0}", e.Message);
-				CleanUp();
-			}
+            HTTP.Response response = new HTTP.Response();
+			response.Body = @"<html><head><title>Test Root</title></head><body>
+<form action=""/form"" method=""post"">
+<input type=""text"" name=""testbox"" /><br />
+<input type=""text"" name=""otherbox"" /><br />
+<input type=""submit"" value=""   Submit   "" />
+</form>
+</body></html>";
+            return response;
 		}
+
+        private HTTP.Response GetResponse_401()
+        {
+            HTTP.Response response = new HTTP.Response();
+            response.Status = HTTP.Status.NotAuthorized;
+            response.AddHeader("WWW-Authenticate", "Basic realm=\"" + Program.Config.WebInterface.Authentication.Realm + "\"");
+            response.Body = @"<html><head><title>Not authorized.</title></head><body>You are not authorized to view document.</body></html>";
+            return response;
+        }
+
+        private HTTP.Response GetResponse_404()
+        {
+            HTTP.Response response = new HTTP.Response();
+            response.Status = HTTP.Status.NotFound;
+            response.Body = @"<html><head><title>Document not found.</title></head><body>Sorry that is not a valid cometbox document.</body></html>";
+            return response;
+        }
 		
-		private HTTPResponse GetResponse(string[] info) 
-		{
-			if (info[1] == "/") {
-				return GetPage_Root();
-			} else if (info[1] == "/other") {
-				return GetPage_Other();
-			}
-			return new HTTPResponse("404 Not Found", "text/html", "<html><body>Page not found.</body></html>");
-		}
-		
-		private HTTPResponse GetPage_Root()
-		{
-			return new HTTPResponse("200 OK", "text/html", @"<html>
-<head>
-	<title>Test Root</title>
-</head>
-<body>
-	Test root page...<br>
-	<a href=""other"">Other</a>
-</body>
-</html>");
-		}
-		
-		private HTTPResponse GetPage_Other()
-		{
-			return new HTTPResponse("200 OK", "text/html", "<html><head><title>Test Root</title></head><body>Other Page</body></html>");
-		}
-		
-		public void CleanUp() 
-		{
-			try {
-				stream.Close();
-			} catch {}
-			try {
-				stream.Dispose();
-			} catch {}
-			try {
-				client.Close();
-			} catch {}
-			
-			stream = null;
-			client = null;
-			
-			IsLive = false;
-		}
-		
-		
-		public string DecodeBase64(string str)
-		{
-			try {
-				return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(str));
-			} catch {
-				return "";
-			}
-		}
+        private void Send(string data)
+        {
+            try
+            {
+                byte[] bytes = Encoding.ASCII.GetBytes(data);
+                stream.Write(bytes, 0, bytes.Length);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("WebInterfaceClient: Error in Send() - {0}", e.Message);
+                CleanUp();
+            }
+        }
+
+        public void CleanUp()
+        {
+            try
+            {
+                stream.Close();
+            }
+            catch { }
+            try
+            {
+                stream.Dispose();
+            }
+            catch { }
+            try
+            {
+                client.Close();
+            }
+            catch { }
+
+            stream = null;
+            client = null;
+
+            IsLive = false;
+        }
 	}
 }
 

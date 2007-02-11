@@ -4,18 +4,18 @@ using System.Text;
 
 namespace cometbox
 {
-    public class ApplicationConfig
+    public class AppConfig
     {
-        public struct AuthenticationConfig
+        public struct AuthConfig
         {
-            public enum AuthenticationType
+            public enum AuthType
             {
                 None,
                 Basic,
                 Digest
             }
 
-            public AuthenticationType Type;
+            public AuthType Type;
             public string Username;
             public string Password;
             public string Realm;
@@ -23,17 +23,24 @@ namespace cometbox
 
         public class ServerInterfaceConfig
         {
-            public bool LocalOnly;
+            public bool LocalOnly = true;
+            public string[] AcceptedIPs;
+            public string BindTo = "127.0.0.1";
+            public int Port = 1802;
         }
 
         public class ClientInterfaceConfig
         {
-            public AuthenticationConfig Authentication;
+            public AuthConfig Authentication;
+            public string BindTo = "127.0.0.1";
+            public int Port = 1800;
         }
 
         public class WebInterfaceConfig
         {
-            public AuthenticationConfig Authentication;
+            public AuthConfig Authentication;
+            public string BindTo = "127.0.0.1";
+            public int Port = 1801;
         }
 
         public ServerInterfaceConfig ServerInterface;
