@@ -49,6 +49,13 @@
     <Compile Include="Util.cs" />
     <Compile Include="WIServer.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="working dir\cometbox.conf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="working dir\wi\images\avatar-fwoom.jpg" />
+    <Content Include="working dir\wi\index.html" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

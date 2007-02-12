@@ -11,7 +11,6 @@ namespace cometbox.HTTP
         private TcpClient client = null;
         private NetworkStream stream = null;
 
-
         Server server;
 
         byte[] read_buffer = new byte[1024];
@@ -48,7 +47,6 @@ namespace cometbox.HTTP
             dc.buffer += Encoding.ASCII.GetString(dc.read_buffer, 0, bytes);
 
             Console.WriteLine(dc.buffer);
-
             dc.ParseInput();
 
             if (dc.stream != null) {
@@ -127,84 +125,36 @@ namespace cometbox.HTTP
             }
 
             if (state == ParseState.Done) {
-                HTTP.Response response = server.HandleRequest(request);
+                state = ParseState.Start;
 
+                HTTP.Response response = server.HandleRequest(request);
+               
                 string res = response.GetResponse();
                 Send(res);
 
-                state = ParseState.Start;
                 request = null;
             }
         }
 
-        private void HandleRequest()
-        {
-            HTTP.Response response;
-
-            if (!request.VerifyAuth(Program.Configuration.WebInterface.Authentication)) {
-                response = GetResponse_401();
-            } else {
-                if (request.Url == "/") {
-                    response = GetResponse_Root();
-                } else if (request.Url == "/form") {
-                    response = GetResponse_Form();
-                } else {
-                    response = GetResponse_404();
-                }
-            }
-
-      
-        }
-
-        private HTTP.Response GetResponse_Form()
-        {
-            HTTP.Response response = new HTTP.Response();
-            response.Body = @"<html><head><title>Test Root</title></head><body>";
-            response.Body += request.Body;
-            response.Body += "</body></html>";
-            return response;
-        }
-
-        private HTTP.Response GetResponse_Root()
-        {
-            HTTP.Response response = new HTTP.Response();
-            response.Body = @"<html><head><title>Test Root</title></head><body>
-<form action=""/form"" method=""post"">
-<input type=""text"" name=""testbox"" /><br />
-<input type=""text"" name=""otherbox"" /><br />
-<input type=""submit"" value=""   Submit   "" />
-</form>
-</body></html>";
-            return response;
-        }
-
-        private HTTP.Response GetResponse_401()
-        {
-            HTTP.Response response = new HTTP.Response();
-            response.Status = HTTP.Status.NotAuthorized;
-            response.AddHeader("WWW-Authenticate", "Basic realm=\"" + Program.Configuration.WebInterface.Authentication.Realm + "\"");
-            response.Body = @"<html><head><title>Not authorized.</title></head><body>You are not authorized to view document.</body></html>";
-            return response;
-        }
-
-        private HTTP.Response GetResponse_404()
-        {
-            HTTP.Response response = new HTTP.Response();
-            response.Status = HTTP.Status.NotFound;
-            response.Body = @"<html><head><title>Document not found.</title></head><body>Sorry that is not a valid cometbox document.</body></html>";
-            return response;
-        }
-
         private void Send(string data)
         {
-            try {
-                byte[] bytes = Encoding.ASCII.GetBytes(data);
-                stream.Write(bytes, 0, bytes.Length);
+            //try {
+            byte[] bytes = Encoding.ASCII.GetBytes(data);
+            int offset = 0;
+            int len = 0;
+            while (offset < bytes.Length) {
+                offset = Math.Min(offset, bytes.Length - 1);
+                len = Math.Min(1024, bytes.Length - offset);
+
+                stream.Write(bytes, offset, len);
+
+                offset += 1024;
             }
-            catch (Exception e) {
-                Console.WriteLine("Client: Error in Send() - {0}", e.Message);
-                CleanUp();
-            }
+            //}
+            //catch (Exception e) {
+            //   Console.WriteLine("Client: Error in Send() - {0}", e.Message);
+            //    CleanUp();
+            //}
         }
 
         public void CleanUp()

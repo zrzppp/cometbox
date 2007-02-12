@@ -64,10 +64,5 @@ namespace cometbox.HTTP
                 return true;
             }
         }
-
-        public string GetDocument()
-        {
-
-        }
     }
 }

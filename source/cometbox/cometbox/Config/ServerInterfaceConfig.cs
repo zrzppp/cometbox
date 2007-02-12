@@ -10,7 +10,5 @@ namespace cometbox.Config
         public string[] AcceptedIPs;
         public string BindTo = "127.0.0.1";
         public int Port = 1802;
-
-
     }
 }

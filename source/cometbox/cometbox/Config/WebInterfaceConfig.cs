@@ -9,6 +9,6 @@ namespace cometbox.Config
         public AuthConfig Authentication;
         public string BindTo = "127.0.0.1";
         public int Port = 1801;
-        public string WWWDir = "/wi/";
+        public string WWWDir = @"wi\";
     }
 }

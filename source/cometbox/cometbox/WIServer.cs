@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace cometbox
 {
@@ -20,7 +21,26 @@ namespace cometbox
 
         public override cometbox.HTTP.Response HandleRequest(cometbox.HTTP.Request request)
         {
-           
+            int pos = 0;
+            string doc = request.Url;
+            if ((pos = doc.IndexOf("//")) >= 0) {
+                doc = doc.Substring(pos + 2, doc.Length - pos - 2); 
+            }
+            if ((pos = doc.IndexOf("/")) == 0) {
+                doc = doc.Substring(pos + 1, doc.Length - pos - 1);
+            }
+            if ((pos = doc.IndexOf("?")) >= 0) {
+                doc = doc.Substring(0, pos + 1);
+            }
+            if (doc == "") {
+                doc = "index.html";
+            }
+
+            FileInfo f = new FileInfo(config.WWWDir + doc);
+
+            Console.WriteLine(f.FullName);
+
+            return HTTP.Response.GetFileResponse(f, request.Url);
         }
     }
 }
