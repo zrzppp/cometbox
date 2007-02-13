@@ -12,11 +12,15 @@ namespace cometbox.HTTP
     {
         private Thread thread = null;
 		private TcpListener listener = null;
+        private Config.AuthConfig authconfig;
 
-		public Server(IPAddress ip, Int32 port)
+		public Server(IPAddress ip, Int32 port, Config.AuthConfig a)
 		{
             Console.WriteLine("Server: Starting on {0}:{1}.", ip.ToString(), port);
-			listener = new TcpListener(ip, port);
+
+            authconfig = a;
+
+			listener = new TcpListener(port);
 			listener.Start();
 		
 			thread = new Thread(new ThreadStart(Loop));
@@ -30,7 +34,7 @@ namespace cometbox.HTTP
 			while ( true ) {
 				TcpClient client = listener.AcceptTcpClient();
 
-				Client dc = new Client(client, this);
+				Client dc = new Client(client, this, authconfig);
 				clients.Add(dc);
 				
 				int i = 0;

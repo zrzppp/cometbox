@@ -26,7 +26,7 @@ namespace cometbox
                 configfile = args[0];
             }
 
-            Config.AppConfig.BuildNewConfigFile(configfile);
+            //Config.AppConfig.BuildNewConfigFile(configfile);
 
             if (new FileInfo(configfile).Exists)
             {

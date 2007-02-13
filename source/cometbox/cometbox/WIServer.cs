@@ -14,12 +14,12 @@ namespace cometbox
         Config.WebInterfaceConfig config;
 
         public WIServer(Config.WebInterfaceConfig c)
-            : base(Dns.GetHostEntry(IPAddress.Parse(c.BindTo)).AddressList[0], c.Port)
+            : base(Dns.GetHostEntry(IPAddress.Parse(c.BindTo)).AddressList[0], c.Port, c.Authentication)
         {
             config = c;
         }
 
-        public override cometbox.HTTP.Response HandleRequest(cometbox.HTTP.Request request)
+        public override HTTP.Response HandleRequest(cometbox.HTTP.Request request)
         {
             int pos = 0;
             string doc = request.Url;
@@ -37,8 +37,6 @@ namespace cometbox
             }
 
             FileInfo f = new FileInfo(config.WWWDir + doc);
-
-            Console.WriteLine(f.FullName);
 
             return HTTP.Response.GetFileResponse(f, request.Url);
         }

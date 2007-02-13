@@ -10,6 +10,7 @@ namespace cometbox.HTTP
     {
         private TcpClient client = null;
         private NetworkStream stream = null;
+        private Config.AuthConfig authconfig;
 
         Server server;
 
@@ -22,10 +23,11 @@ namespace cometbox.HTTP
 
         public bool IsLive = true;
 
-        public Client(TcpClient c, Server s)
+        public Client(TcpClient c, Server s, Config.AuthConfig a)
         {
             client = c;
             server = s;
+            authconfig = a;
 
             stream = client.GetStream();
 
@@ -46,7 +48,8 @@ namespace cometbox.HTTP
 
             dc.buffer += Encoding.ASCII.GetString(dc.read_buffer, 0, bytes);
 
-            Console.WriteLine(dc.buffer);
+            //Console.WriteLine(dc.buffer);
+
             dc.ParseInput();
 
             if (dc.stream != null) {
@@ -127,21 +130,24 @@ namespace cometbox.HTTP
             if (state == ParseState.Done) {
                 state = ParseState.Start;
 
-                HTTP.Response response = server.HandleRequest(request);
-               
-                string res = response.GetResponse();
-                Send(res);
+                HTTP.Response response;
+                if (request.VerifyAuth(authconfig)) {
+                    response = server.HandleRequest(request);
+                } else {
+                    response = Response.Get401Response(authconfig);
+                }
+                response.SendResponse(stream, this);
 
                 request = null;
             }
         }
 
-        private void Send(string data)
+        public void Send(string data)
         {
-            //try {
             byte[] bytes = Encoding.ASCII.GetBytes(data);
             int offset = 0;
             int len = 0;
+            Console.WriteLine("Sending: " + bytes.Length);
             while (offset < bytes.Length) {
                 offset = Math.Min(offset, bytes.Length - 1);
                 len = Math.Min(1024, bytes.Length - offset);
@@ -150,11 +156,7 @@ namespace cometbox.HTTP
 
                 offset += 1024;
             }
-            //}
-            //catch (Exception e) {
-            //   Console.WriteLine("Client: Error in Send() - {0}", e.Message);
-            //    CleanUp();
-            //}
+            Console.WriteLine("Done.");
         }
 
         public void CleanUp()
