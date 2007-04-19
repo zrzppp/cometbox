@@ -6,10 +6,12 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace cometbox
 {
-    class SIServer : HTTP.Server
+    public class SIServer : HTTP.Server
     {
         Config.ServerInterfaceConfig config;
 
@@ -21,9 +23,28 @@ namespace cometbox
 
         public override HTTP.Response HandleRequest(cometbox.HTTP.Request request)
         {
+            try {
+                XmlSerializer s = new XmlSerializer(typeof(SIRequest));
+                SIRequest data = (SIRequest)s.Deserialize(new XmlTextReader(request.Body));
+                
 
+                return HTTP.Response.Get500Response("Parsed.");
+            } catch (Exception e) {
+                return HTTP.Response.Get500Response("Error parsing xml: " + e.Message);
+            }
+        }
 
-            return HTTP.Response.Get500Response("Not implemented");
+        public class SIRequest
+        {
+            public enum CommandType
+            {
+                Queue,
+                Remove
+            }
+
+            public CommandType Command = CommandType.Queue;
+            public string User = "";
+            public string[] Messages;
         }
     }
 }
