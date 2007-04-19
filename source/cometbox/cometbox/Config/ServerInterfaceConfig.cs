@@ -6,7 +6,7 @@ namespace cometbox.Config
 {
     public class ServerInterfaceConfig
     {
-        public bool LocalOnly = true;
+        public AuthConfig Authentication;
         public string[] AcceptedIPs;
         public string BindTo = "127.0.0.1";
         public int Port = 1802;

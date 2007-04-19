@@ -160,8 +160,11 @@ namespace cometbox.HTTP
         {
             if (e == ".jpg") {
                 return "image/jpeg";
+            } else if (e == ".gif") {
+                return "image/gif";
+            } else {
+                return "text/html";
             }
-            return "text/html";
         }
     }
 }

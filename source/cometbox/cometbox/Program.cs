@@ -26,7 +26,11 @@ namespace cometbox
                 configfile = args[0];
             }
 
-            //Config.AppConfig.BuildNewConfigFile(configfile);
+            if (!new FileInfo(configfile).Exists) {
+                try {
+                    Config.AppConfig.BuildNewConfigFile(configfile);
+                } catch { }
+            }
 
             if (new FileInfo(configfile).Exists)
             {
@@ -45,14 +49,8 @@ namespace cometbox
             }
 
             WIServer wiserver = new WIServer(Configuration.WebInterface);
+            SIServer siserver = new SIServer(Configuration.ServerInterface);
 
-            //ServerInterfaceServer data = new ServerInterfaceServer(Dns.GetHostEntry(IPAddress.Parse(Config.ServerInterface.BindTo)).AddressList[0], Config.ServerInterface.Port);
-            //WebInterfaceServer webint = new WebInterfaceServer();
-
-            //while (webint.IsRunning())
-            //{
-            //    Thread.Sleep(1000);
-            //}
         }
 
         static void GracefullyChokeAndDie()

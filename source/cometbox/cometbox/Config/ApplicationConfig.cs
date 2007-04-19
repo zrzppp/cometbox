@@ -50,7 +50,12 @@ namespace cometbox.Config
             c.WebInterface.Authentication.Password = "cometbox123";
 
             c.ServerInterface = new Config.ServerInterfaceConfig();
-            c.ServerInterface.LocalOnly = true;
+            c.ServerInterface.Authentication = new Config.AuthConfig();
+            c.ServerInterface.Authentication.Type = Config.AuthType.Basic;
+            c.ServerInterface.Authentication.Realm = "Cometbox Server Interface";
+            c.ServerInterface.Authentication.Username = "server";
+            c.ServerInterface.Authentication.Password = "server123";
+            c.ServerInterface.AcceptedIPs = new string[] {"127.0.0.1"};
 
             using (FileStream fs = new FileStream(file, FileMode.Create)) {
                 XmlSerializer serializer = new XmlSerializer(typeof(Config.AppConfig));
