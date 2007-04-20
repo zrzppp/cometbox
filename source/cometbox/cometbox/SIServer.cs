@@ -23,17 +23,29 @@ namespace cometbox
 
         public override HTTP.Response HandleRequest(cometbox.HTTP.Request request)
         {
+            Console.WriteLine("SIServer HandleRequest(). " + request.Url);
+
+            Console.WriteLine("---");
+            Console.WriteLine("\""+request.Body+"\"");
+            Console.WriteLine("---");
+
             try {
                 XmlSerializer s = new XmlSerializer(typeof(SIRequest));
-                SIRequest data = (SIRequest)s.Deserialize(new XmlTextReader(request.Body));
-                
 
-                return HTTP.Response.Get500Response("Parsed.");
+                MemoryStream mem = new MemoryStream();
+                mem.Write(System.Text.Encoding.ASCII.GetBytes(request.Body), 0, request.Body.Length);
+                mem.Seek(0, 0);
+
+                SIRequest data = (SIRequest)s.Deserialize(mem);
+
+                return HTTP.Response.GetHtmlResponse("GOOD!");
             } catch (Exception e) {
-                return HTTP.Response.Get500Response("Error parsing xml: " + e.Message);
+                Console.WriteLine("Error parsing xml: " + e.Message);
+                return HTTP.Response.GetHtmlResponse("Error parsing xml: " + e.Message);
             }
         }
 
+        [XmlRoot("Request")]
         public class SIRequest
         {
             public enum CommandType
@@ -42,8 +54,15 @@ namespace cometbox
                 Remove
             }
 
+            public struct MessageData
+            {
+                public string Message;
+            }
+
             public CommandType Command = CommandType.Queue;
             public string User = "";
+
+            [XmlElement("Message")]
             public string[] Messages;
         }
     }

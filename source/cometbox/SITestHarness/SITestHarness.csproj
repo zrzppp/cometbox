@@ -4,11 +4,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E2E7A72F-834C-49AB-88E8-D33EAA489FF0}</ProjectGuid>
+    <ProjectGuid>{C08C31E8-5816-45C7-906F-E65554B46670}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>cometbox</RootNamespace>
-    <AssemblyName>cometbox</AssemblyName>
+    <RootNamespace>SITestHarness</RootNamespace>
+    <AssemblyName>SITestHarness</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,26 +33,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config\AuthConfig.cs" />
-    <Compile Include="Config\AuthType.cs" />
-    <Compile Include="Config\ClientInterfaceConfig.cs" />
-    <Compile Include="Config\ServerInterfaceConfig.cs" />
-    <Compile Include="Config\WebInterfaceConfig.cs" />
-    <Compile Include="HTTP\Client.cs" />
-    <Compile Include="HTTP\Request.cs" />
-    <Compile Include="HTTP\Response.cs" />
-    <Compile Include="HTTP\Server.cs" />
-    <Compile Include="HTTP\Status.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Config\ApplicationConfig.cs" />
-    <Compile Include="SIServer.cs" />
-    <Compile Include="Util.cs" />
-    <Compile Include="WIServer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="working dir\wi\images\avatar-fwoom.jpg" />
-    <Content Include="working dir\wi\index.html" />
+    <Content Include="Data.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

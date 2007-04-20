@@ -77,6 +77,8 @@ namespace cometbox.HTTP
                     return "401 Not Authorized";
                 case HTTP.Status.NotFound:
                     return "404 Not Found";
+                case HTTP.Status.InternalServerError:
+                    return "500 Internal Server Error";
                 default:
                     throw new Exception("Invalid HTTP response.");
             }
@@ -101,7 +103,7 @@ namespace cometbox.HTTP
         public static Response Get500Response(string errormsg)
         {
             Response res = new Response();
-            res.Status = Status.NotFound;
+            res.Status = Status.InternalServerError;
             res.Mime = "text/html";
             res.Body = @"<html>
 <head>
@@ -154,6 +156,15 @@ namespace cometbox.HTTP
             } else {
                 return Get404Response(file.Name + " (" + Url + ")");
             }
+        }
+
+        public static Response GetHtmlResponse(string html)
+        {
+            Response res = new Response();
+            res.Body = html;
+            res.Status = Status.OK;
+            res.Mime = "text/html";
+            return res;
         }
 
         public static string GetMimeType(string e)

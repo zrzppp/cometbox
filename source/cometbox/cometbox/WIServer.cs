@@ -21,6 +21,8 @@ namespace cometbox
 
         public override HTTP.Response HandleRequest(cometbox.HTTP.Request request)
         {
+            Console.WriteLine("WIServer HandleRequest(). " + request.Url);
+
             int pos = 0;
             string doc = request.Url;
             if ((pos = doc.IndexOf("//")) >= 0) {
